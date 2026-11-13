@@ -274,6 +274,16 @@ export default function App() {
 )}
                   </div>
                 )}
+                {doneOrder.finalPrice > 0 && (
+  <a
+    href={`https://t.me/fellstore1?text=${encodeURIComponent(`Halo min, ini bukti TF untuk order ${doneOrder.orderCode} (${formatIDR(doneOrder.finalPrice)})`)}`}
+    target="_blank"
+    rel="noreferrer"
+    className="block w-full py-2.5 rounded-xl bg-sky-500 text-white font-semibold text-sm text-center"
+  >
+    Kirim Bukti TF (Telegram)
+  </a>
+)}
                 <button onClick={() => { setCheckout(null); setTab('orders'); }} className="w-full py-2.5 rounded-xl bg-emerald-500 text-zinc-950 font-semibold text-xs">Buka Halaman Cek Order</button>
               </div>
             ) : (
