@@ -519,8 +519,9 @@ export default function AdminPanel({
                 >
                   <strong className="text-emerald-400">{v.code}</strong>
                   <span className="text-zinc-400">(-{formatIDR(v.discount)})</span>
-                  <button
-                    type="button                     onClick={() => handleRemoveVoucher(v.code)}
+                   <button
+                    type="button"
+                    onClick={() => handleRemoveVoucher(v.code)}
                     className="text-zinc-500 hover:text-rose-400"
                   >
                     <X className="w-3.5 h-3.5" />
