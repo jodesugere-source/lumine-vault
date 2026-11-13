@@ -493,4 +493,266 @@ export default function App() {
                       onClick={() => handleCopy(ord.driveLink, ord.id)}
                       className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs text-zinc-200 flex items-center justify-center gap-1.5"
                     >
-                      {copiedId === or
+                      {copiedId === ord.id ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                      <span>{copiedId === ord.id ? 'Tersalin' : 'Salin Link'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-zinc-400 pt-2 border-t border-zinc-800">
+                    Admin sedang memverifikasi pembayaranmu.
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </main>
+      )}
+
+      {activeTab === 'admin' && (
+        <main className="max-w-6xl mx-auto px-4 py-8">
+          {!isAdminUnlocked ? (
+            <div className="max-w-sm mx-auto mt-10 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mx-auto mb-4">
+                <Lock className="w-6 h-6 text-cyan-400" />
+              </div>
+              <h2 className="font-bold text-base text-white mb-1">Admin Control Locked</h2>
+              <p className="text-xs text-zinc-400 mb-5">Masukkan PIN admin untuk mengelola toko.</p>
+              <form onSubmit={handleAdminUnlock} className="space-y-3">
+                <input
+                  type="password"
+                  value={pinInput}
+                  onChange={(e) => setPinInput(e.target.value)}
+                  placeholder="Masukkan PIN..."
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-center text-sm tracking-widest text-white"
+                />
+                {pinError && <p className="text-xs text-rose-400">{pinError}</p>}
+                <button type="submit" className="w-full py-2.5 rounded-xl bg-cyan-400 text-zinc-950 font-semibold text-xs">
+                  Buka Panel Kontrol
+                </button>
+              </form>
+            </div>
+          ) : (
+            <AdminPanel
+              db={db}
+              products={products}
+              orders={orders}
+              settings={settings}
+              formatIDR={formatIDR}
+              onLock={handleAdminLock}
+            />
+          )}
+        </main>
+      )}
+
+      {previewProduct && (
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-2xl w-full overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-zinc-800 flex items-center justify-between">
+              <h3 className="font-bold text-sm text-white">{previewProduct.title}</h3>
+              <button onClick={() => setPreviewProduct(null)} className="p-1.5 rounded-lg bg-zinc-800 text-zinc-400">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="relative bg-zinc-950 aspect-[4/3] flex items-center justify-center overflow-hidden select-none">
+              <img
+                src={(previewProduct.previewUrls && previewProduct.previewUrls[previewIdx]) || previewProduct.coverUrl}
+                alt="Preview"
+                className="max-h-full max-w-full object-contain pointer-events-none"
+              />
+              <div className="absolute inset-0 pointer-events-none flex flex-wrap items-center justify-center gap-8 opacity-25 -rotate-12 scale-125">
+                {Array.from({ length: 9 }).map((_, idx) => (
+                  <span key={idx} className="text-white font-black tracking-widest text-sm whitespace-nowrap">
+                    HYDROGEN VAULT • PREVIEW
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-zinc-800 flex items-center justify-between">
+              <span className="font-bold text-emerald-400 text-sm">
+                {previewProduct.price === 0 ? 'GRATIS' : formatIDR(previewProduct.price)}
+              </span>
+              <button
+                onClick={() => {
+                  const target = previewProduct;
+                  setPreviewProduct(null);
+                  openCheckout(target);
+                }}
+                className="px-4 py-2 rounded-xl bg-emerald-500 text-zinc-950 font-semibold text-xs"
+              >
+                Lanjut Checkout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {checkoutProduct && (
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 my-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-base text-white">
+                {createdOrder ? 'Pesanan Tercatat!' : 'Checkout Photopack'}
+              </h3>
+              <button onClick={() => setCheckoutProduct(null)} className="p-1.5 rounded-lg bg-zinc-800 text-zinc-400">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {createdOrder ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center">
+                  <span className="text-[11px] uppercase text-emerald-300 block mb-1">Simpan Kode Pesananmu</span>
+                  <div className="text-2xl font-mono font-black text-white mb-2">{createdOrder.orderCode}</div>
+                  <button
+                    onClick={() => handleCopy(createdOrder.orderCode, 'new_code')}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-900 text-xs text-emerald-400 border border-zinc-700"
+                  >
+                    {copiedId === 'new_code' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedId === 'new_code' ? 'Tersalin' : 'Salin Kode'}</span>
+                  </button>
+                </div>
+
+                {createdOrder.finalPrice > 0 && (
+                  <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2 text-xs">
+                    <p className="text-zinc-400">
+                      Bayar <strong className="text-emerald-400">{formatIDR(createdOrder.finalPrice)}</strong> via{' '}
+                      <strong>{createdOrder.paymentMethod}</strong>:
+                    </p>
+                    <div className="p-2.5 rounded-lg bg-zinc-900 text-zinc-200 break-all font-mono">
+                      {settings.paymentInfo?.[createdOrder.paymentMethod] || 'Hubungi Admin'}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => {
+                    setCheckoutProduct(null);
+                    setActiveTab('orders');
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-emerald-500 text-zinc-950 font-semibold text-xs"
+                >
+                  Cek Status & Buka Vault Sekarang
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleCreateOrder} className="space-y-4">
+                <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-between">
+                  <p className="font-semibold text-xs text-white">{checkoutProduct.title}</p>
+                  <span className="font-bold text-sm text-emerald-400">
+                    {checkoutProduct.price === 0 ? 'GRATIS' : formatIDR(checkoutProduct.price)}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1">Nama / Nickname *</label>
+                  <input
+                    type="text"
+                    required
+                    value={buyerName}
+                    onChange={(e) => setBuyerName(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-zinc-400 mb-1">Email *</label>
+                    <input
+                      type="email"
+                      required
+                      value={buyerEmail}
+                      onChange={(e) => setBuyerEmail(e.target.value)}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-zinc-400 mb-1">Username Telegram</label>
+                    <input
+                      type="text"
+                      value={buyerTelegram}
+                      onChange={(e) => setBuyerTelegram(e.target.value)}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white"
+                    />
+                  </div>
+                </div>
+
+                {checkoutProduct.price > 0 && (
+                  <>
+                    <div>
+                      <label className="block text-xs text-zinc-400 mb-1.5">Metode Pembayaran</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['QRIS', 'Saweria', 'Trakteer', 'SociaBuzz'].map((m) => (
+                          <button
+                            type="button"
+                            key={m}
+                            onClick={() => setPaymentMethod(m)}
+                            className={`py-2 px-3 rounded-xl text-xs font-medium border text-left ${
+                              paymentMethod === m
+                                ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
+                                : 'bg-zinc-950 border-zinc-800 text-zinc-400'
+                            }`}
+                          >
+                            {m}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-zinc-400 mb-1">Kode Voucher (Opsional)</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={voucherInput}
+                          onChange={(e) => setVoucherInput(e.target.value)}
+                          placeholder="LMN-VIP"
+                          className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white uppercase"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyVoucher}
+                          className="px-3.5 py-2 rounded-xl bg-zinc-800 text-xs font-medium text-white"
+                        >
+                          Pakai
+                        </button>
+                      </div>
+                      {voucherMsg && (
+                        <p className={`text-[11px] mt-1 ${appliedVoucher ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {voucherMsg}
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                <div className="pt-3 border-t border-zinc-800 flex items-center justify-between">
+                  <span className="text-xs text-zinc-400">Total Bayar</span>
+                  <span className="text-base font-bold text-emerald-400">
+                    {formatIDR(
+                      Math.max(
+                        0,
+                        (Number(checkoutProduct.price) || 0) -
+                          (appliedVoucher ? Number(appliedVoucher.discount) : 0)
+                      )
+                    )}
+                  </span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submittingOrder}
+                  className="w-full py-2.5 rounded-xl bg-emerald-500 text-zinc-950 font-semibold text-xs"
+                >
+                  {submittingOrder ? 'Memproses...' : 'Buat Pesanan Sekarang'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
