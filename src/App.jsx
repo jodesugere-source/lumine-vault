@@ -263,7 +263,15 @@ export default function App() {
                 {doneOrder.finalPrice > 0 && (
                   <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-left text-xs space-y-1">
                     <p className="text-zinc-400">Transfer <strong className="text-emerald-400">{formatIDR(doneOrder.finalPrice)}</strong> via <strong>{doneOrder.paymentMethod}</strong>:</p>
-                    <p className="font-mono text-zinc-200 break-all">{settings.paymentInfo?.[doneOrder.paymentMethod]}</p>
+                    {settings.paymentInfo?.[doneOrder.paymentMethod]?.startsWith('http') ? (
+  doneOrder.paymentMethod === 'QRIS' ? (
+    <img src={settings.paymentInfo.QRIS} alt="QRIS" className="w-48 mx-auto rounded-lg bg-white p-2 mt-2" />
+  ) : (
+    <a href={settings.paymentInfo[doneOrder.paymentMethod]} target="_blank" rel="noreferrer" className="block text-emerald-400 underline break-all">{settings.paymentInfo[doneOrder.paymentMethod]}</a>
+  )
+) : (
+  <p className="font-mono text-zinc-200 break-all">{settings.paymentInfo?.[doneOrder.paymentMethod]}</p>
+)}
                   </div>
                 )}
                 <button onClick={() => { setCheckout(null); setTab('orders'); }} className="w-full py-2.5 rounded-xl bg-emerald-500 text-zinc-950 font-semibold text-xs">Buka Halaman Cek Order</button>
