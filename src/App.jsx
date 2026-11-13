@@ -131,10 +131,12 @@ export default function App() {
           <nav className="flex items-center gap-1.5">
             <button onClick={() => setTab('store')} className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${tab === 'store' ? 'bg-emerald-500 text-zinc-950 font-semibold' : 'text-zinc-400'}`}><ShoppingBag className="w-3.5 h-3.5" /> Toko</button>
             <button onClick={() => setTab('orders')} className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${tab === 'orders' ? 'bg-emerald-500 text-zinc-950 font-semibold' : 'text-zinc-400'}`}><Search className="w-3.5 h-3.5" /> Cek Order</button>
-            <button onClick={() => setTab('admin')} className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 border border-zinc-800 ${tab === 'admin' ? 'bg-cyan-400 text-zinc-950 font-semibold' : 'text-zinc-400'}`}>
-              {unlocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />} Admin
-              {pendingCount > 0 && <span className="px-1.5 text-[10px] font-bold rounded-full bg-rose-500 text-white">{pendingCount}</span>}
-            </button>
+            {new URLSearchParams(window.location.search).get('admin') === '1' && (
+  <button onClick={() => setTab('admin')} className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition ${tab === 'admin' ? 'bg-emerald-500 text-zinc-950 font-semibold' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}>
+    {unlocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />} Admin
+    {pendingCount > 0 && <span className="px-1.5 text-[10px] font-bold rounded-full bg-rose-500 text-white">{pendingCount}</span>}
+  </button>
+)}
           </nav>
         </div>
       </header>
