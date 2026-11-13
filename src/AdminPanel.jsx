@@ -520,4 +520,188 @@ export default function AdminPanel({
                   <strong className="text-emerald-400">{v.code}</strong>
                   <span className="text-zinc-400">(-{formatIDR(v.discount)})</span>
                   <button
-                    type="button
+                    type="button                     onClick={() => handleRemoveVoucher(v.code)}
+                    className="text-zinc-500 hover:text-rose-400"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                value={newVoucherCode}
+                onChange={(e) => setNewVoucherCode(e.target.value)}
+                placeholder="Kode (cth: LMN-10K)"
+                className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white uppercase"
+              />
+              <input
+                type="number"
+                value={newVoucherDiscount}
+                onChange={(e) => setNewVoucherDiscount(e.target.value)}
+                placeholder="Potongan Rp"
+                className="w-full sm:w-36 bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white"
+              />
+              <button
+                type="button"
+                onClick={handleAddVoucher}
+                className="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-semibold text-white"
+              >
+                + Tambah
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={savingSettings}
+            className="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs"
+          >
+            {savingSettings ? 'Menyimpan...' : 'Simpan Semua Pengaturan'}
+          </button>
+        </form>
+      )}
+
+      {showProductForm && (
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full p-6 my-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-base text-white">
+                {editingProduct ? 'Edit Photopack' : 'Tambah Photopack Baru'}
+              </h3>
+              <button
+                onClick={() => setShowProductForm(false)}
+                className="p-1.5 rounded-lg bg-zinc-800 text-zinc-400"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProduct} className="space-y-3.5">
+              <div>
+                <label className="block text-xs text-zinc-400 mb-1">Judul Photopack *</label>
+                <input
+                  type="text"
+                  required
+                  value={productForm.title}
+                  onChange={(e) => setProductForm({ ...productForm, title: e.target.value })}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1">Kategori</label>
+                  <select
+                    value={productForm.category}
+                    onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white"
+                  >
+                    <option value="Cosplay">Cosplay</option>
+                    <option value="Studio">Studio</option>
+                    <option value="VIP Bundle">VIP Bundle</option>
+                    <option value="Free Sample">Free Sample</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1">Harga (Rp) — 0 = Gratis</label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={productForm.price}
+                    onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1">Jumlah Foto</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={productForm.photoCount}
+                    onChange={(e) => setProductForm({ ...productForm, photoCount: e.target.value })}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1">Jumlah Video</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={productForm.videoCount}
+                    onChange={(e) => setProductForm({ ...productForm, videoCount: e.target.value })}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1">Badge</label>
+                  <input
+                    type="text"
+                    value={productForm.badge}
+                    onChange={(e) => setProductForm({ ...productForm, badge: e.target.value })}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-zinc-400 mb-1">Link Google Drive Vault *</label>
+                <input
+                  type="url"
+                  required
+                  value={productForm.driveLink}
+                  onChange={(e) => setProductForm({ ...productForm, driveLink: e.target.value })}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-zinc-400 mb-1">URL Gambar Cover *</label>
+                <input
+                  type="url"
+                  required
+                  value={productForm.coverUrl}
+                  onChange={(e) => setProductForm({ ...productForm, coverUrl: e.target.value })}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-zinc-400 mb-1">URL Preview (1 baris = 1 gambar)</label>
+                <textarea
+                  rows="2"
+                  value={productForm.previewUrlsText}
+                  onChange={(e) => setProductForm({ ...productForm, previewUrlsText: e.target.value })}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-zinc-400 mb-1">Deskripsi Singkat</label>
+                <textarea
+                  rows="2"
+                  value={productForm.description}
+                  onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs"
+              >
+                Simpan Photopack
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+            }
+          
