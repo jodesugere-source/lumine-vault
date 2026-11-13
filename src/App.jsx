@@ -7,8 +7,6 @@ import {
   doc,
   setDoc,
   addDoc,
-  updateDoc,
-  deleteDoc,
   onSnapshot,
   serverTimestamp
 } from 'firebase/firestore';
@@ -21,26 +19,15 @@ import {
   Eye,
   CheckCircle2,
   Clock,
-  Plus,
-  Trash2,
-  Edit3,
   ExternalLink,
   Copy,
   Check,
-  Sparkles,
-  Settings,
   Package,
-  DollarSign,
   X,
-  AlertTriangle,
-  LogOut,
-  Image as ImageIcon,
-  Ticket
+  Image as ImageIcon
 } from 'lucide-react';
+import AdminPanel from './AdminPanel.jsx';
 
-// ============================================================================
-// KONFIGURASI FIREBASE & PIN ADMIN
-// ============================================================================
 const firebaseConfig = {
   apiKey: "AIzaSyAu_-Vmp8m2ADpXbyIOeV9eUWIus5gwH20",
   authDomain: "lumine---vault.firebaseapp.com",
@@ -51,24 +38,14 @@ const firebaseConfig = {
   measurementId: "G-1NBRD5V9PQ"
 };
 
-const ADMIN_PIN = "123456"; // Ubah angka ini jika ingin mengganti PIN panel Admin
-// ============================================================================
+const ADMIN_PIN = "123456";
 
-const isFirebaseConfigured =
-  firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("GANTI_");
-
-let app = null;
-let auth = null;
-let db = null;
-
-if (isFirebaseConfigured) {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-}
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 const DEFAULT_SETTINGS = {
-  storeName: "LUMINE PHOTOPACK",
+  storeName: "HYDROGEN // VAULT",
   bannerText: "⚡ PROMO RILIS BARU: Gunakan kode LMN-VIP untuk diskon Rp 10.000!",
   paymentInfo: {
     QRIS: "Scan QRIS / Transfer ke DANA/GoPay: 0812-XXXX-XXXX a.n. Admin Vault",
@@ -81,55 +58,6 @@ const DEFAULT_SETTINGS = {
     { code: "NEWMEMBER", discount: 5000, active: true }
   ]
 };
-
-const DEMO_PRODUCTS = [
-  {
-    title: "Furina Fontaine - Hydro Archon Set",
-    category: "Cosplay",
-    price: 45000,
-    photoCount: 38,
-    videoCount: 4,
-    badge: "BEST SELLER",
-    active: true,
-    coverUrl: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80",
-    previewUrls: [
-      "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80"
-    ],
-    driveLink: "https://drive.google.com/drive/folders/contoh-link-vault-1",
-    description: "Full HD 4K RAW + Edited set lengkap dengan 4 video behind the scene."
-  },
-  {
-    title: "Neon Cyber Maid - Night Studio",
-    category: "Studio",
-    price: 35000,
-    photoCount: 25,
-    videoCount: 2,
-    badge: "NEW",
-    active: true,
-    coverUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
-    previewUrls: [
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80"
-    ],
-    driveLink: "https://drive.google.com/drive/folders/contoh-link-vault-2",
-    description: "Konsep studio cyberpunk pencahayaan neon, resolusi tinggi tanpa kompresi."
-  },
-  {
-    title: "Starter Pack Sample - Free Vault",
-    category: "Free Sample",
-    price: 0,
-    photoCount: 8,
-    videoCount: 0,
-    badge: "GRATIS",
-    active: true,
-    coverUrl: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80",
-    previewUrls: [
-      "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80"
-    ],
-    driveLink: "https://drive.google.com/drive/folders/contoh-link-free-sample",
-    description: "Sample gratis untuk cek kualitas resolusi sebelum membeli paket VIP."
-  }
-];
 
 const formatIDR = (num) =>
   new Intl.NumberFormat('id-ID', {
@@ -150,9 +78,9 @@ const generateOrderCode = () => {
 export default function App() {
   const [activeTab, setActiveTab] = useState('store');
   const [user, setUser] = useState(null);
-  const [isAdminUnlocked, setIsAdminUnlocked] = useState(() => {
-    return sessionStorage.getItem('hv_admin_unlocked') === 'true';
-  });
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(
+    () => sessionStorage.getItem('hv_admin_unlocked') === 'true'
+  );
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
 
@@ -181,89 +109,40 @@ export default function App() {
   const [lookupQuery, setLookupQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
 
-  const [adminSubTab, setAdminSubTab] = useState('orders');
-  const [orderFilter, setOrderFilter] = useState('all');
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [showProductForm, setShowProductForm] = useState(false);
-  const [productForm, setProductForm] = useState({
-    title: '',
-    category: 'Cosplay',
-    price: 35000,
-    photoCount: 20,
-    videoCount: 0,
-    badge: '',
-    active: true,
-    coverUrl: '',
-    previewUrlsText: '',
-    driveLink: '',
-    description: ''
-  });
-
-  const [settingsForm, setSettingsForm] = useState(DEFAULT_SETTINGS);
-  const [newVoucherCode, setNewVoucherCode] = useState('');
-  const [newVoucherDiscount, setNewVoucherDiscount] = useState(5000);
-  const [savingSettings, setSavingSettings] = useState(false);
-
   useEffect(() => {
-    if (!isFirebaseConfigured) {
-      setLoading(false);
-      return;
-    }
-
-    const unsubAuth = onAuthStateChanged(auth, (currentUser) => {
+    const unsub = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
       } else {
-        signInAnonymously(auth).catch((err) => {
-          console.error('Auth error:', err);
-          setLoading(false);
-        });
+        signInAnonymously(auth).catch(() => setLoading(false));
       }
     });
-
-    return () => unsubAuth();
+    return () => unsub();
   }, []);
 
   useEffect(() => {
-    if (!isFirebaseConfigured || !user) return;
+    if (!user) return;
 
-    const unsubProducts = onSnapshot(
-      collection(db, 'photopacks'),
-      (snap) => {
-        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-        setProducts(list);
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Products listener error:', err);
-        setLoading(false);
+    const unsubProducts = onSnapshot(collection(db, 'photopacks'), (snap) => {
+      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      setProducts(list);
+      setLoading(false);
+    });
+
+    const unsubOrders = onSnapshot(collection(db, 'orders'), (snap) => {
+      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      setOrders(list);
+    });
+
+    const unsubSettings = onSnapshot(doc(db, 'settings', 'store'), (docSnap) => {
+      if (docSnap.exists()) {
+        setSettings({ ...DEFAULT_SETTINGS, ...docSnap.data() });
+      } else {
+        setDoc(doc(db, 'settings', 'store'), DEFAULT_SETTINGS).catch(() => {});
       }
-    );
-
-    const unsubOrders = onSnapshot(
-      collection(db, 'orders'),
-      (snap) => {
-        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-        setOrders(list);
-      },
-      (err) => console.error('Orders listener error:', err)
-    );
-
-    const unsubSettings = onSnapshot(
-      doc(db, 'settings', 'store'),
-      (docSnap) => {
-        if (docSnap.exists()) {
-          const data = { ...DEFAULT_SETTINGS, ...docSnap.data() };
-          setSettings(data);
-          setSettingsForm(data);
-        } else {
-          setDoc(doc(db, 'settings', 'store'), DEFAULT_SETTINGS).catch(() => {});
-        }
-      },
-      (err) => console.error('Settings listener error:', err)
-    );
+    });
 
     return () => {
       unsubProducts();
@@ -287,14 +166,6 @@ export default function App() {
 
   const pendingOrdersCount = useMemo(
     () => orders.filter((o) => o.status === 'pending').length,
-    [orders]
-  );
-
-  const totalRevenue = useMemo(
-    () =>
-      orders
-        .filter((o) => o.status === 'confirmed')
-        .reduce((acc, o) => acc + (Number(o.finalPrice) || 0), 0),
     [orders]
   );
 
@@ -323,7 +194,7 @@ export default function App() {
       setPinError('');
       setPinInput('');
     } else {
-      setPinError('PIN salah. Periksa konstanta ADMIN_PIN di App.jsx.');
+      setPinError('PIN salah.');
     }
   };
 
@@ -352,13 +223,13 @@ export default function App() {
       setVoucherMsg(`Voucher ${found.code} aktif (-${formatIDR(found.discount)})`);
     } else {
       setAppliedVoucher(null);
-      setVoucherMsg('Kode voucher tidak valid atau sudah nonaktif.');
+      setVoucherMsg('Kode voucher tidak valid.');
     }
   };
 
   const handleCreateOrder = async (e) => {
     e.preventDefault();
-    if (!checkoutProduct || !isFirebaseConfigured) return;
+    if (!checkoutProduct) return;
 
     setSubmittingOrder(true);
     try {
@@ -389,181 +260,14 @@ export default function App() {
       setCreatedOrder(orderPayload);
       setLookupQuery(orderCode);
     } catch (err) {
-      console.error('Order creation failed:', err);
-      alert('Gagal membuat pesanan. Pastikan Firestore Rules sudah mengizinkan write.');
+      alert('Gagal membuat pesanan. Cek Firestore Rules.');
     } finally {
       setSubmittingOrder(false);
     }
   };
 
-  const handleSeedDemo = async () => {
-    if (!isFirebaseConfigured) return;
-    try {
-      for (const item of DEMO_PRODUCTS) {
-        await addDoc(collection(db, 'photopacks'), {
-          ...item,
-          createdAt: serverTimestamp()
-        });
-      }
-    } catch (err) {
-      console.error('Seed error:', err);
-      alert('Gagal mengisi katalog demo. Cek izin Firestore.');
-    }
-  };
-
-  const handleConfirmOrder = async (orderId) => {
-    try {
-      await updateDoc(doc(db, 'orders', orderId), { status: 'confirmed' });
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm('Hapus data pesanan ini?')) return;
-    try {
-      await deleteDoc(doc(db, 'orders', orderId));
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const openNewProductForm = () => {
-    setEditingProduct(null);
-    setProductForm({
-      title: '',
-      category: 'Cosplay',
-      price: 35000,
-      photoCount: 25,
-      videoCount: 0,
-      badge: 'NEW',
-      active: true,
-      coverUrl: '',
-      previewUrlsText: '',
-      driveLink: '',
-      description: ''
-    });
-    setShowProductForm(true);
-  };
-
-  const openEditProductForm = (prod) => {
-    setEditingProduct(prod);
-    setProductForm({
-      title: prod.title || '',
-      category: prod.category || 'Cosplay',
-      price: prod.price ?? 0,
-      photoCount: prod.photoCount ?? 0,
-      videoCount: prod.videoCount ?? 0,
-      badge: prod.badge || '',
-      active: prod.active !== false,
-      coverUrl: prod.coverUrl || '',
-      previewUrlsText: (prod.previewUrls || []).join('\n'),
-      driveLink: prod.driveLink || '',
-      description: prod.description || ''
-    });
-    setShowProductForm(true);
-  };
-
-  const handleSaveProduct = async (e) => {
-    e.preventDefault();
-    const previewList = productForm.previewUrlsText
-      .split('\n')
-      .map((u) => u.trim())
-      .filter(Boolean);
-
-    const payload = {
-      title: productForm.title.trim(),
-      category: productForm.category,
-      price: Number(productForm.price) || 0,
-      photoCount: Number(productForm.photoCount) || 0,
-      videoCount: Number(productForm.videoCount) || 0,
-      badge: productForm.badge.trim(),
-      active: Boolean(productForm.active),
-      coverUrl: productForm.coverUrl.trim(),
-      previewUrls: previewList.length > 0 ? previewList : [productForm.coverUrl.trim()].filter(Boolean),
-      driveLink: productForm.driveLink.trim(),
-      description: productForm.description.trim()
-    };
-
-    try {
-      if (editingProduct) {
-        await updateDoc(doc(db, 'photopacks', editingProduct.id), payload);
-      } else {
-        await addDoc(collection(db, 'photopacks'), {
-          ...payload,
-          createdAt: serverTimestamp()
-        });
-      }
-      setShowProductForm(false);
-      setEditingProduct(null);
-    } catch (err) {
-      console.error(err);
-      alert('Gagal menyimpan produk.');
-    }
-  };
-
-  const handleToggleProductActive = async (prod) => {
-    try {
-      await updateDoc(doc(db, 'photopacks', prod.id), {
-        active: !(prod.active !== false)
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleDeleteProduct = async (prodId) => {
-    if (!window.confirm('Hapus photopack ini dari katalog?')) return;
-    try {
-      await deleteDoc(doc(db, 'photopacks', prodId));
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleAddVoucher = () => {
-    const code = newVoucherCode.trim().toUpperCase();
-    if (!code) return;
-    const updated = [
-      ...(settingsForm.vouchers || []).filter((v) => v.code !== code),
-      { code, discount: Number(newVoucherDiscount) || 5000, active: true }
-    ];
-    setSettingsForm({ ...settingsForm, vouchers: updated });
-    setNewVoucherCode('');
-  };
-
-  const handleRemoveVoucher = (code) => {
-    setSettingsForm({
-      ...settingsForm,
-      vouchers: (settingsForm.vouchers || []).filter((v) => v.code !== code)
-    });
-  };
-
-  const handleSaveSettings = async (e) => {
-    e.preventDefault();
-    setSavingSettings(true);
-    try {
-      await setDoc(doc(db, 'settings', 'store'), settingsForm);
-      alert('Pengaturan toko berhasil disimpan!');
-    } catch (err) {
-      console.error(err);
-      alert('Gagal menyimpan pengaturan.');
-    } finally {
-      setSavingSettings(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500 selection:text-zinc-950">
-      {!isFirebaseConfigured && (
-        <div className="bg-amber-500/15 border-b border-amber-500/40 px-4 py-3 text-amber-200 text-xs sm:text-sm flex items-center justify-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-          <span>
-            <strong>Setup Belum Selesai:</strong> Masukkan <code className="bg-zinc-900 px-1.5 py-0.5 rounded">firebaseConfig</code> milikmu di bagian atas file <code className="bg-zinc-900 px-1.5 py-0.5 rounded">src/App.jsx</code> agar database aktif.
-          </span>
-        </div>
-      )}
-
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans">
       {settings.bannerText && (
         <div className="bg-gradient-to-r from-emerald-500/20 via-cyan-500/20 to-emerald-500/20 border-b border-emerald-500/20 px-4 py-2 text-center text-xs sm:text-sm font-medium text-emerald-300">
           {settings.bannerText}
@@ -572,11 +276,8 @@ export default function App() {
 
       <header className="sticky top-0 z-40 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800/80">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
-          <button
-            onClick={() => setActiveTab('store')}
-            className="flex items-center gap-2.5 text-left group"
-          >
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center group-hover:bg-emerald-500/20 transition">
+          <button onClick={() => setActiveTab('store')} className="flex items-center gap-2.5 text-left">
+            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center">
               <Shield className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
@@ -592,10 +293,8 @@ export default function App() {
           <nav className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={() => setActiveTab('store')}
-              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 ${
-                activeTab === 'store'
-                  ? 'bg-emerald-500 text-zinc-950 font-semibold'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 ${
+                activeTab === 'store' ? 'bg-emerald-500 text-zinc-950 font-semibold' : 'text-zinc-400 hover:text-white'
               }`}
             >
               <ShoppingBag className="w-4 h-4" />
@@ -604,10 +303,8 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('orders')}
-              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 ${
-                activeTab === 'orders'
-                  ? 'bg-emerald-500 text-zinc-950 font-semibold'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 ${
+                activeTab === 'orders' ? 'bg-emerald-500 text-zinc-950 font-semibold' : 'text-zinc-400 hover:text-white'
               }`}
             >
               <Search className="w-4 h-4" />
@@ -616,4 +313,184 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('admin')}
-              className={`px-3 py-1.5 rounded-lg text-xs s
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 ${
+                activeTab === 'admin'
+                  ? 'bg-cyan-400 text-zinc-950 font-semibold'
+                  : 'text-zinc-400 hover:text-white border border-zinc-800'
+              }`}
+            >
+              {isAdminUnlocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">Admin</span>
+              {pendingOrdersCount > 0 && (
+                <span className="px-1.5 text-[10px] font-bold rounded-full bg-rose-500 text-white">
+                  {pendingOrdersCount}
+                </span>
+              )}
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      {activeTab === 'store' && (
+        <main className="max-w-6xl mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap ${
+                    selectedCategory === cat
+                      ? 'bg-emerald-500 text-zinc-950 font-semibold'
+                      : 'bg-zinc-900 text-zinc-400 border border-zinc-800'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative w-full md:w-72">
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari karakter atau tema..."
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-sm text-white"
+              />
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-20 text-zinc-500 text-sm">Memuat katalog vault...</div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-12 text-center">
+              <Package className="w-10 h-10 text-zinc-600 mx-auto mb-3" />
+              <p className="text-zinc-300 font-medium mb-1">Belum ada photopack ditampilkan</p>
+              <p className="text-zinc-500 text-xs mb-4">Masuk ke tab Admin untuk menambah katalog.</p>
+              <button
+                onClick={() => setActiveTab('admin')}
+                className="px-4 py-2 rounded-xl bg-zinc-800 text-xs font-medium text-white"
+              >
+                Buka Panel Admin
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-zinc-900/80 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col"
+                >
+                  <div
+                    className="relative aspect-[4/3] bg-zinc-950 overflow-hidden cursor-pointer"
+                    onClick={() => {
+                      setPreviewProduct(item);
+                      setPreviewIdx(0);
+                    }}
+                  >
+                    {item.coverUrl ? (
+                      <img src={item.coverUrl} alt={item.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-zinc-700">
+                        <ImageIcon className="w-10 h-10" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-80" />
+                    {item.badge && (
+                      <span className="absolute top-3 left-3 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase bg-emerald-500 text-zinc-950">
+                        {item.badge}
+                      </span>
+                    )}
+                    <span className="absolute top-3 right-3 px-2.5 py-1 rounded-md text-[11px] bg-zinc-950/80 border border-zinc-800 text-zinc-300">
+                      {item.category}
+                    </span>
+                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-zinc-300">
+                      <span>
+                        {item.photoCount || 0} Foto {item.videoCount > 0 ? `• ${item.videoCount} Video` : ''}
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-emerald-400 font-medium">
+                        <Eye className="w-3.5 h-3.5" /> Preview
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="font-bold text-base text-white mb-1.5 line-clamp-1">{item.title}</h3>
+                    <p className="text-xs text-zinc-400 line-clamp-2 mb-4 flex-1">{item.description}</p>
+                    <div className="pt-3 border-t border-zinc-800 flex items-center justify-between gap-3">
+                      <span className="font-bold text-base text-emerald-400">
+                        {item.price === 0 ? 'GRATIS' : formatIDR(item.price)}
+                      </span>
+                      <button
+                        onClick={() => openCheckout(item)}
+                        className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs flex items-center gap-1.5"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                        <span>{item.price === 0 ? 'Klaim Gratis' : 'Beli Set'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      )}
+
+      {activeTab === 'orders' && (
+        <main className="max-w-2xl mx-auto px-4 py-10">
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 sm:p-8">
+            <h2 className="text-lg font-bold text-white mb-1">Cek Status & Akses Google Drive</h2>
+            <p className="text-xs text-zinc-400 mb-6">
+              Masukkan <strong>Kode Pesanan</strong>, <strong>Email</strong>, atau <strong>Username Telegram</strong>.
+            </p>
+
+            <div className="relative mb-6">
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={lookupQuery}
+                onChange={(e) => setLookupQuery(e.target.value)}
+                placeholder="Ketik kode pesanan / email / @telegram..."
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white"
+              />
+            </div>
+
+            {searchedOrders.map((ord) => (
+              <div key={ord.id} className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 mb-3">
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div>
+                    <span className="text-xs font-mono text-emerald-400 font-bold">{ord.orderCode}</span>
+                    <h3 className="font-semibold text-sm text-white">{ord.productTitle}</h3>
+                    <p className="text-xs text-zinc-500">
+                      {ord.buyerName} ({ord.paymentMethod}) • {formatIDR(ord.finalPrice)}
+                    </p>
+                  </div>
+                  {ord.status === 'confirmed' ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Akses Dibuka
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-300">
+                      <Clock className="w-3.5 h-3.5" /> Menunggu Verifikasi
+                    </span>
+                  )}
+                </div>
+
+                {ord.status === 'confirmed' ? (
+                  <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-zinc-800">
+                    <a
+                      href={ord.driveLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-500 text-zinc-950 font-semibold text-xs flex items-center justify-center gap-1.5"
+                    >
+                      <ExternalLink className="w-4 h-4" /> Buka Google Drive Vault
+                    </a>
+                    <button
+                      onClick={() => handleCopy(ord.driveLink, ord.id)}
+                      className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs text-zinc-200 flex items-center justify-center gap-1.5"
+                    >
+                      {copiedId === or
