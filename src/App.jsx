@@ -288,7 +288,7 @@ export default function App() {
                 {checkout.price > 0 && (
                   <>
                     <div className="grid grid-cols-2 gap-2">
-                      {['QRIS', 'Saweria', 'Trakteer', 'SociaBuzz'].map((m) => (
+                      {['QRIS', 'GoPay'].map((m) => (
                         <button type="button" key={m} onClick={() => setPayMethod(m)} className={`py-2 px-3 rounded-xl text-xs border text-left ${payMethod === m ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300' : 'bg-zinc-950 border-zinc-800 text-zinc-400'}`}>{m}</button>
                       ))}
                     </div>
